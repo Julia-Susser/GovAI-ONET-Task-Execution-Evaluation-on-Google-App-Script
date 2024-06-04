@@ -5,8 +5,8 @@ var x = getHeaders();
 const headers = x[0]
 const headerIndices = x[1]
 const prompts = x[2]
-const apiKey = 'sk-proj-BkInUxVeJqzLmleEz4UuT3BlbkFJ4uyCXfjOK9AQR5uJtTSQ'; // Global variable
-
+const apiKey = 'sk-proj-NAyMH2u9z5b5nTaqrOfNT3BlbkFJywgPok9bPiUJ055xGHCk'; // Global variable
+console.log(prompts)
 
 function fixPrompt(prompt, rowDict) {
   return prompt.replace(/\$(\w+)/g, (match, p1) => rowDict[p1] || match);
@@ -32,31 +32,31 @@ function setCell(col, row, response) {
 
 
 
-function runEvalutionCell(row){
+function runEvaluationCell(row){
+  var rowDict = getRow(row)
   const type = "Evaluation Rating";
   const promptTemplate = sheet.getRange("B2").getValue();
   const prompt = fixPrompt(promptTemplate, rowDict);
   const response = callOpenAI(prompt);
-   return [[response, response]]
+  return [[response, response]]
 }
 
 
 function runSimpleCell(row, type){
+  var rowDict = getRow(row)
   const promptTemplate = prompts[type];
   const prompt = fixPrompt(promptTemplate, rowDict);
   const response = callOpenAI(prompt);
-   return [[response]]
+  return [[response]]
 }
 
 
-
-
-
-
 function runSubtaskDecomposition(row){
+  var rowDict = getRow(row)
   const type = "Subtask decomposition";
   const promptTemplate = prompts[type];
   const prompt = fixPrompt(promptTemplate, rowDict);
+  const response = callOpenAI(prompt);
   var subtasks = response.split(/\d+\./).map(s => s.trim()).filter(Boolean);
   var responseList = subtasks.map((subtask, index) => [response, index+1, subtask]);
   return responseList
@@ -65,16 +65,17 @@ function runSubtaskDecomposition(row){
 
 
 function runCompletion(minRow, maxRow) {
-  minCol = headerIndices["Results format"]
-  maxCol = minCol + 1 //Subtask completion
   for (let row = minRow; row <= maxRow; row++){
-    for (let col = minCol; col <= maxCol; col++) {
-      const cell = sheet.getRange(row, col);
-      col = cell.getColumn()
-      row = cell.getRow();
-      var response = runSimpleCell(row)
-      setCell(col, row, response)
-    }
+    var type = "Results format"
+    col = headerIndices[type]
+    var response = runSimpleCell(row, type)
+    setCell(col, row, response)
+
+    var type = "Subtask completion"
+    col = headerIndices[type]
+    var response = runSimpleCell(row, type)
+    setCell(col, row, response)
+    
   }
 }
 
@@ -97,8 +98,9 @@ function runEvaluation(minRow, maxRow) {
 
 function runContextAndSubtaskDecomposition(row){
   //context 
-  col = headerIndices["Context"]
-  var response = runSimpleCell(row)
+  var type = "Context"
+  col = headerIndices[type]
+  var response = runSimpleCell(row, type)
   setCell(col, row, response)
 
 
