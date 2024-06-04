@@ -21,13 +21,14 @@ function getHeaders() {
   const colLetters = getColLetters(headers.length);
   const headerDict = {};
   const headerIndices = {};
-  
+  const promptDict = {};
   for (let i = 0; i < headers.length; i++) {
     headerDict[i+1] = [headers[i], prompts[i]];
     headerIndices[headers[i]] = i+1
+    promptDict[headers[i]] = prompts[i]
   }
 
-  return [headerDict, headerIndices];
+  return [headerDict, headerIndices, promptDict];
 }
 
 function getColLetters(numCols) {

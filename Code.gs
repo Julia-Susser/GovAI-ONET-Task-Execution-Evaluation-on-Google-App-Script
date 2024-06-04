@@ -4,12 +4,15 @@ var promptRow = 4
 var x = getHeaders();
 const headers = x[0]
 const headerIndices = x[1]
-const apiKey = 'sk-proj-igFEJZzOcItDWNpkGwdMT3BlbkFJtVhZkiy6PzWV71LT5GSE'; // Global variable
+const prompts = x[2]
+const apiKey = 'sk-proj-BkInUxVeJqzLmleEz4UuT3BlbkFJ4uyCXfjOK9AQR5uJtTSQ'; // Global variable
 
 
 function fixPrompt(prompt, rowDict) {
   return prompt.replace(/\$(\w+)/g, (match, p1) => rowDict[p1] || match);
 }
+
+
 
 function setCell(col, row, response) {
   if (response && response.length > 0 && response[0].length > 0) {
@@ -27,44 +30,37 @@ function setCell(col, row, response) {
 
 }
 
-// function mockRun(col, row){
-//   var colLetter = "E"
-//   var row = 6
-//   range = sheet.getRange(colLetter + row.toString());
-//   var col = range.getColumn()
-//   var response = runCell(col, row)
-//   setCell(col, row, response)
-// }
 
-function runCell(col,row) {
-  const header = headers[col]
-  const type = header[0];
-  const promptTemplate = header[1];
-  const rowDict = getRow(row);
 
-  if (type === "Evaluation Rating") {
-    const prompt = sheet.getRange("B2").getValue(); // Get prompt from B2
-  } else if (["Occupation", "Task ID", "Task", "Subtask index", "Subtask", "Evaluation Reasoning"].includes(header)) {
-    return;
-  } 
+function runEvalutionCell(row){
+  const type = "Evaluation Rating";
+  const promptTemplate = sheet.getRange("B2").getValue();
   const prompt = fixPrompt(promptTemplate, rowDict);
-
-  console.log(rowDict)
-  Logger.log(prompt)
   const response = callOpenAI(prompt);
-  Logger.log(response)
-  if (type === "Subtask decomposition") {
-    var subtasks = response.split(/\d+\./).map(s => s.trim()).filter(Boolean);
-    var responseList = subtasks.map((subtask, index) => [response, index+1, subtask]);
-    return responseList
-  } else if (type === "Evaluation Rating"){
-    return [[response, response]]
-  } else {
-    return [[response]]
-  } 
+   return [[response, response]]
 }
 
 
+function runSimpleCell(row, type){
+  const promptTemplate = prompts[type];
+  const prompt = fixPrompt(promptTemplate, rowDict);
+  const response = callOpenAI(prompt);
+   return [[response]]
+}
+
+
+
+
+
+
+function runSubtaskDecomposition(row){
+  const type = "Subtask decomposition";
+  const promptTemplate = prompts[type];
+  const prompt = fixPrompt(promptTemplate, rowDict);
+  var subtasks = response.split(/\d+\./).map(s => s.trim()).filter(Boolean);
+  var responseList = subtasks.map((subtask, index) => [response, index+1, subtask]);
+  return responseList
+}
 
 
 
@@ -76,7 +72,7 @@ function runCompletion(minRow, maxRow) {
       const cell = sheet.getRange(row, col);
       col = cell.getColumn()
       row = cell.getRow();
-      var response = runCell(col, row)
+      var response = runSimpleCell(row)
       setCell(col, row, response)
     }
   }
@@ -90,7 +86,7 @@ function runEvaluation(minRow, maxRow) {
       const cell = sheet.getRange(row, col);
       col = cell.getColumn()
       row = cell.getRow();
-      var response = runCell(col, row)
+      var response = runEvaluationCell(row)
       setCell(col, row, response)
     }
   }
@@ -102,13 +98,13 @@ function runEvaluation(minRow, maxRow) {
 function runContextAndSubtaskDecomposition(row){
   //context 
   col = headerIndices["Context"]
-  var response = runCell(col, row)
+  var response = runSimpleCell(row)
   setCell(col, row, response)
 
 
   //subtask decompositon
   col = headerIndices["Subtask decomposition"]
-  var response = runCell(col, row)
+  var response = runSubtaskDecomposition(row)
   setCell(col, row, response)
   maxRow = row+response.length-1
   minCol = col+response[0].length
@@ -170,10 +166,12 @@ function runOneCell() {
   if (type == "Subtask Decomposition"){
     return; //can't create new rows when run for one cell
   }
-
-  var response = runCell(col, row)
-  if (response.length > 1){
-    return; //can't create new rows when run for one cell
+  if (type == "Evaluation Rating"){
+    var response = runEvaluationCell(row)
+  }else if(type in ["Context", "Results format", "Subtask completion"]){
+    var response = runSimpleCell(row,type)
+  }else{
+    return
   }
 
   setCell(col, row, response)
