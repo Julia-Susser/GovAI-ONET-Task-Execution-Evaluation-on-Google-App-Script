@@ -6,7 +6,7 @@ const headers = x[0]
 const headerIndices = x[1]
 const prompts = x[2]
 const apiKey = 'sk-proj-NAyMH2u9z5b5nTaqrOfNT3BlbkFJywgPok9bPiUJ055xGHCk'; // Global variable
-console.log(prompts)
+
 
 function fixPrompt(prompt, rowDict) {
   return prompt.replace(/\$(\w+)/g, (match, p1) => rowDict[p1] || match);
@@ -25,7 +25,6 @@ function setCell(col, row, response) {
       }
     } 
   }
-  console.log(row, col, response.length, response[0].length)
   sheet.getRange(row, col, response.length, response[0].length).setValues(response);
 
 }
@@ -34,7 +33,7 @@ function setCell(col, row, response) {
 
 function runEvaluationCell(row){
   var rowDict = getRow(row)
-  const type = "Evaluation Rating";
+  const type = "Evaluation rating";
   const promptTemplate = sheet.getRange("B2").getValue();
   const prompt = fixPrompt(promptTemplate, rowDict);
   const response = callOpenAI(prompt);
@@ -80,7 +79,7 @@ function runCompletion(minRow, maxRow) {
 }
 
 function runEvaluation(minRow, maxRow) {
-  minCol = headerIndices["Evaluation Rating"]
+  minCol = headerIndices["Evaluation rating"]
   maxCol = minCol //evaluation reasoning does not need to be run separately
   for (let row = minRow; row <= maxRow; row++){
     for (let col = minCol; col <= maxCol; col++) {
@@ -109,8 +108,7 @@ function runContextAndSubtaskDecomposition(row){
   var response = runSubtaskDecomposition(row)
   setCell(col, row, response)
   maxRow = row+response.length-1
-  minCol = col+response[0].length
-  return [minCol, maxRow]
+  return maxRow
 }
 
 
@@ -133,24 +131,23 @@ function resetTaskID(row){
       lastRowIndex = startRow + index; 
     }
   });
-
+  console.log(lastRowIndex,firstRowIndex)
   if (lastRowIndex > firstRowIndex) {
     sheet.deleteRows(firstRowIndex + 1, lastRowIndex - firstRowIndex); 
   }
   var col = headerIndices["Task"] + 1;
-  sheet.getRange(firstRowIndex, col, firstRowIndex, sheet.getMaxColumns() - col + 1).clearContent();
-  return firstRowIndex;
+  sheet.getRange(firstRowIndex, col, 1, sheet.getMaxColumns() - col + 1).clearContent();
+  return [firstRowIndex, lastRowIndex];
 }
+
 
 function run(){
   var cell = sheet.getActiveRange();
   var row = cell.getRow(); 
   var row = 6
-  resetTaskID(row)
+  row = resetTaskID(row)[0]
   const maxCol = getLastColumnForRow(headerRow); 
-  var x = runContextAndSubtaskDecomposition(row)
-  minCol = x[0]
-  maxRow = x[1]
+  var maxRow = runContextAndSubtaskDecomposition(row)
   minRow = row
   runCompletion(minRow, maxRow)
   runEvaluation(minRow, maxRow)
@@ -168,7 +165,7 @@ function runOneCell() {
   if (type == "Subtask Decomposition"){
     return; //can't create new rows when run for one cell
   }
-  if (type == "Evaluation Rating"){
+  if (type == "Evaluation rating"){
     var response = runEvaluationCell(row)
   }else if(type in ["Context", "Results format", "Subtask completion"]){
     var response = runSimpleCell(row,type)
