@@ -140,7 +140,7 @@ function resetTaskID(row){
 }
 
 
-function run(){
+function runRow(){
   var cell = sheet.getActiveRange();
   var row = cell.getRow(); 
   var row = 70
@@ -181,7 +181,7 @@ function runOneCell() {
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
   ui.createMenu('OpenAI')
-    .addItem('Run row', 'run')
+    .addItem('Run row', 'runRow')
     .addItem('Run cell', 'runOneCell')
     .addItem('Batch run', 'runBatch')
     .addItem('Reset rows', 'resetRowRange')

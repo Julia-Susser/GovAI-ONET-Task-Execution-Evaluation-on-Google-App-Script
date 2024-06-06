@@ -135,8 +135,8 @@ function runBatch(){
   var startRow = range.getRow();
   var endRow = range.getLastRow();
   
-  var startRow = 11
-  var endRow = 15
+  // var startRow = 11
+  // var endRow = 15
   
   var reset = resetRows(startRow,endRow)
   startRow = reset[0]
