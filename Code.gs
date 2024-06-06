@@ -143,14 +143,15 @@ function resetTaskID(row){
 function run(){
   var cell = sheet.getActiveRange();
   var row = cell.getRow(); 
-  var row = 6
+  var row = 70
   row = resetTaskID(row)[0]
   const maxCol = getLastColumnForRow(headerRow); 
   var maxRow = runContextAndSubtaskDecomposition(row)
   minRow = row
-  runCompletion(minRow, maxRow)
-  runEvaluation(minRow, maxRow)
-
+  // runCompletion(minRow, maxRow)
+  // runEvaluation(minRow, maxRow)
+  batchRunCompletion(minRow,maxRow)
+  batchRunEvaluation(minRow,maxRow)
 }
 
 
@@ -182,5 +183,7 @@ function onOpen() {
   ui.createMenu('OpenAI')
     .addItem('Run row', 'run')
     .addItem('Run cell', 'runOneCell')
+    .addItem('Batch run', 'runBatch')
+    .addItem('Reset rows', 'resetRowRange')
     .addToUi();
 }

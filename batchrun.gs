@@ -14,7 +14,6 @@ function batchRunContextAndSubtaskDecomposition(minRow, maxRow){
     const prompt = fixPrompt(promptTemplate, rowDict);
     return prompt
   })
-  console.log(batchPrompts)
   responses = batchOpenAIRequest(batchPrompts)
   setBatchCells(col, minRow, responses)
 
@@ -28,7 +27,7 @@ function batchRunContextAndSubtaskDecomposition(minRow, maxRow){
     const prompt = fixPrompt(promptTemplate, rowDict);
     return prompt
   })
-  console.log(batchPrompts)
+
   var responses = batchOpenAIRequest(batchPrompts)
   var subtasksBatch = responses.map(response => response[0].split(/\d+\./).map(s => s.trim()).filter(Boolean));
   var responseList = subtasksBatch.map((subtasks, i) => subtasks.map((subtask, index) => [responses[i][0], index+1, subtask]));
@@ -43,6 +42,7 @@ function batchRunContextAndSubtaskDecomposition(minRow, maxRow){
     taskRows.push([row, row + rowCount - 1]);
     row += rowCount;
   }
+  console.log(taskRows)
   return taskRows
 }
 
@@ -118,24 +118,42 @@ function resetRows(startRow,endRow){
   return [startRow,endRow]
 }
 
+function resetRowRange(){
+  var range = sheet.getActiveRange();
+  var startRow = range.getRow();
+  var endRow = range.getLastRow();
+
+  var reset = resetRows(startRow,endRow)
+  startRow = reset[0]
+  endRow = reset[1]
+  
+}
+
+
 function runBatch(){
   var range = sheet.getActiveRange();
   var startRow = range.getRow();
   var endRow = range.getLastRow();
   
-  var startRow = 6
-  var n = 10
-  var endRow = startRow + n -1
+  var startRow = 11
+  var endRow = 15
   
   var reset = resetRows(startRow,endRow)
   startRow = reset[0]
   endRow = reset[1]
 
-  var taskRows = batchRunContextAndSubtaskDecomposition(startRow, endRow)
-  for (let i=0; i< taskRows.length; i++){
-    minRow = taskRows[i][0]
-    maxRow = taskRows[i][1]
-    batchRunCompletion(minRow, maxRow)
-    batchRunEvaluation(minRow, maxRow)
+
+  for (var row=startRow; row<=endRow; row++){
+      var taskBatchRows = batchRunContextAndSubtaskDecomposition(row, Math.min(row+9,endRow))
+       for (let i=0; i< taskBatchRows.length; i++){
+        minRow = taskBatchRows[i][0]
+        maxRow = taskBatchRows[i][1]
+        batchRunCompletion(minRow, maxRow)
+        batchRunEvaluation(minRow, maxRow)
+      }
+      row = taskBatchRows[taskBatchRows.length-1][1]
   }
+
 }
+
+
