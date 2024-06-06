@@ -131,7 +131,6 @@ function resetTaskID(row){
       lastRowIndex = startRow + index; 
     }
   });
-  console.log(lastRowIndex,firstRowIndex)
   if (lastRowIndex > firstRowIndex) {
     sheet.deleteRows(firstRowIndex + 1, lastRowIndex - firstRowIndex); 
   }

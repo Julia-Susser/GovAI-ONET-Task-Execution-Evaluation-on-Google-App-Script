@@ -97,27 +97,40 @@ function batchRunEvaluation(minRow, maxRow){
 
 }
 
-
-function runBatch(){
-  var cell = sheet.getActiveRange();
-  var startRow = cell.getRow(); 
-  var startRow = 6
-  var n = 2
-  var endRow = startRow + n -1
-  for (let row = startRow; row < endRow; row++){
+function resetRows(startRow,endRow){
+  for (let row = startRow; row <= endRow; row++){
     var reset = resetTaskID(row)
+    if (reset == undefined){
+      endRow = row -1
+    }
     if (reset[0] < startRow){
       startRow = reset[0]
     }
-    row = reset[0]+1
+    row = reset[0]
     var change = reset[1]-reset[0]
     if (endRow - change > startRow){
           endRow = endRow-change
     }else{
-      endRow = startRow
+      endRow = row
     }
-    console.log(row,startRow,endRow,reset)
+    console.log(row,startRow, endRow)
   }
+  return [startRow,endRow]
+}
+
+function runBatch(){
+  var range = sheet.getActiveRange();
+  var startRow = range.getRow();
+  var endRow = range.getLastRow();
+  
+  var startRow = 6
+  var n = 10
+  var endRow = startRow + n -1
+  
+  var reset = resetRows(startRow,endRow)
+  startRow = reset[0]
+  endRow = reset[1]
+
   var taskRows = batchRunContextAndSubtaskDecomposition(startRow, endRow)
   for (let i=0; i< taskRows.length; i++){
     minRow = taskRows[i][0]
